@@ -1,5 +1,5 @@
 /*
-	personal-website - The personal website of RobotoSkunk
+	bnnuy - A fast and simple framework for Bun's HTTP API.
 	Copyright (C) 2023 Edgar Alexis Lima <contact@robotoskunk.com>
 	This program is free software: you can redistribute it and/or modify
 	it under the terms of the GNU Affero General Public License as published
@@ -14,8 +14,10 @@
 */
 
 
+import { watch } from 'fs';
 import { readdir } from 'fs/promises';
 import { minimatch } from 'minimatch';
+import MiddlewareBase from './middlewareBase';
 
 
 export interface ServeStaticOptions
@@ -37,7 +39,7 @@ export interface ServeStaticOptions
 }
 
 
-class StaticDirectory
+class StaticDirectory implements MiddlewareBase
 {
 	private path: string;
 
@@ -48,6 +50,10 @@ class StaticDirectory
 	constructor(path: string)
 	{
 		this.path = path;
+
+		watch(path, { recursive: true }, async (event, filename) => {
+			await this.loadPaths();
+		});
 	}
 
 
@@ -76,6 +82,7 @@ class StaticDirectory
 			if (file.isDirectory()) {
 				if (options.useDirHTTPCode !== undefined) {
 					this.directories[virtualPath] = 403;
+					this.directories[`${virtualPath}/`] = 403;
 				}
 
 				await this.loadDirectory(path, pathToRemove, options);
@@ -104,17 +111,23 @@ class StaticDirectory
 	}
 
 
-	public async load(path: string, options: ServeStaticOptions = {})
+	public async loadPaths(options: ServeStaticOptions = {})
 	{
 		this.directories = {};
 
-		await this.loadDirectory(path, undefined, options);
+		await this.loadDirectory(this.path, undefined, options);
 	}
 
 
 	public get(path: string)
 	{
 		return this.directories[path];
+	}
+
+
+	public getPaths()
+	{
+		return Object.keys(this.directories);
 	}
 }
 
