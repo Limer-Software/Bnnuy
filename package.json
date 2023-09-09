@@ -1,14 +1,46 @@
 {
 	"name": "bnnuy",
 	"version": "0.2.1-1",
-	"author": "robotoskunk",
 	"module": "index.ts",
 	"type": "module",
+	"description": "A fast, lightweight, simple, and easy to use framework for Bun's HTTP API.",
+
+	"author": "Limer Software",
+	"contributors": [
+		{
+			"name": "RobotoSkunk",
+			"email": "contact@robotoskunk.com",
+			"url": "https://robotoskunk.com"
+		}
+	],
 
 	"license": "LGPL-3.0-only",
+	"keywords": [
+		"bun",
+		"bnnuy",
+		"bunny",
+		"express",
+		"expressjs",
+		"framework",
+		"http",
+		"websocket",
+		"ws",
+		"fast",
+		"lightweight",
+		"light",
+		"simple"
+	],
 
 	"repository": {
 		"url": "https://github.com/Limer-Software/Bnnuy.git"
+	},
+	"bugs": {
+		"url": "https://github.com/Limer-Software/Bnnuy/issues",
+		"email": "contact@robotoskunk.com"
+	},
+
+	"scripts": {
+		"test": "bun run --watch test/index.ts"
 	},
 
 	"devDependencies": {
