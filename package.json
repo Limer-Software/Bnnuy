@@ -1,9 +1,11 @@
 {
 	"name": "bnnuy",
-	"version": "0.2.0-1",
+	"version": "0.2.0-2",
 	"author": "robotoskunk",
 	"module": "index.ts",
 	"type": "module",
+
+	"license": "LGPL-3.0-only",
 
 	"repository": {
 		"url": "https://github.com/Limer-Software/Bnnuy.git"
