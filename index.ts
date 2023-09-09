@@ -19,6 +19,7 @@ import BnnuyResponse from './utils/bnnuyResponse';
 import Middleware, { BnnuyHandler, BnnuyMethods, BnnuyMiddlewareResponse } from './utils/middleware';
 import MiddlewareBase from './utils/middlewareBase';
 import StaticDirectory, { ServeStaticOptions } from './utils/staticDirectory';
+import { Server } from 'bun';
 
 
 interface BnnuyOptions
@@ -163,9 +164,10 @@ class Bnnuy
 	 * Add a middleware.
 	 * @param handlers The handlers to add.
 	 */
-	public use(...handlers: BnnuyHandler[])
+	public use(...handlers: BnnuyHandler[]): Bnnuy
 	{
 		this.middleware('*', ...handlers);
+		return this;
 	}
 
 	/**
@@ -173,9 +175,10 @@ class Bnnuy
 	 * @param method The method to add the middleware to.
 	 * @param handlers The handlers to add.
 	 */
-	public all(route: string | string[], ...handlers: BnnuyHandler[])
+	public all(route: string | string[], ...handlers: BnnuyHandler[]): Bnnuy
 	{
 		this.route('ANY', route, ...handlers);
+		return this;
 	}
 
 	/**
@@ -183,9 +186,10 @@ class Bnnuy
 	 * @param route The route to add the middleware to.
 	 * @param handlers The handlers to add.
 	 */
-	public get(route: string | string[], ...handlers: BnnuyHandler[])
+	public get(route: string | string[], ...handlers: BnnuyHandler[]): Bnnuy
 	{
 		this.route('GET', route, ...handlers);
+		return this;
 	}
 
 	/**
@@ -193,9 +197,10 @@ class Bnnuy
 	 * @param route The route to add the middleware to.
 	 * @param handlers The handlers to add.
 	 */
-	public post(route: string | string[], ...handlers: BnnuyHandler[])
+	public post(route: string | string[], ...handlers: BnnuyHandler[]): Bnnuy
 	{
 		this.route('GET', route, ...handlers);
+		return this;
 	}
 
 	/**
@@ -203,9 +208,10 @@ class Bnnuy
 	 * @param route The route to add the middleware to.
 	 * @param handlers The handlers to add.
 	 */
-	public put(route: string | string[], ...handlers: BnnuyHandler[])
+	public put(route: string | string[], ...handlers: BnnuyHandler[]): Bnnuy
 	{
 		this.route('PUT', route, ...handlers);
+		return this;
 	}
 
 	/**
@@ -213,9 +219,10 @@ class Bnnuy
 	 * @param route The route to add the middleware to.
 	 * @param handlers The handlers to add.
 	 */
-	public delete(route: string | string[], ...handlers: BnnuyHandler[])
+	public delete(route: string | string[], ...handlers: BnnuyHandler[]): Bnnuy
 	{
 		this.route('DELETE', route, ...handlers);
+		return this;
 	}
 
 	/**
@@ -223,9 +230,10 @@ class Bnnuy
 	 * @param route The route to add the middleware to.
 	 * @param handlers The handlers to add.
 	 */
-	public head(route: string | string[], ...handlers: BnnuyHandler[])
+	public head(route: string | string[], ...handlers: BnnuyHandler[]): Bnnuy
 	{
 		this.route('HEAD', route, ...handlers);
+		return this;
 	}
 
 
@@ -237,7 +245,7 @@ class Bnnuy
 	 * @param callback A callback function to be called when the server starts listening.
 	 * @returns The resulting server.
 	 */
-	public async listen(port: number | string, callback: (() => void) | undefined = undefined)
+	public async listen(port: number | string, callback: ((server: Server) => void) | undefined = undefined)
 	{
 		const prepareResponse = this.prepareResponse.bind(this);
 		const middlewares = this.middlewares;
@@ -327,7 +335,7 @@ class Bnnuy
 
 
 		if (callback !== undefined) {
-			callback();
+			callback(server);
 		}
 
 		return server;

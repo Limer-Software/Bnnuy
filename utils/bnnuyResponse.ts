@@ -105,10 +105,7 @@ class BnnuyResponse
 
 		return new Response(this.body, {
 			status: this.statusCode,
-			headers: {
-				...this.headers,
-				...headers
-			}
+			headers: Object.assign(headers, this.headers)
 		});
 	}
 }

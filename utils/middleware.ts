@@ -33,6 +33,16 @@ class Middleware implements MiddlewareBase
 		this.method = method;
 		this.paths = paths;
 		this.handlers = handlers;
+
+		for (const i in this.paths) {
+			if (this.paths[i] === '') {
+				throw new Error('The path cannot be empty.');
+			}
+
+			if (this.paths[i] === '*') {
+				this.paths[i] = '**';
+			}
+		}
 	}
 
 
@@ -79,9 +89,11 @@ class Middleware implements MiddlewareBase
 			doFallback = true;
 		}
 
+		const url = new URL(req.url);
+
 
 		for (const path of this.paths) {
-			if (path === '*' || minimatch(req.url, path)) {
+			if (minimatch(url.pathname, path)) {
 				for (const handler of this.handlers) {
 					try {
 						doFallback = false;

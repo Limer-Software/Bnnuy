@@ -1,6 +1,6 @@
 {
 	"name": "bnnuy",
-	"version": "0.2.0-2",
+	"version": "0.2.1-1",
 	"author": "robotoskunk",
 	"module": "index.ts",
 	"type": "module",
