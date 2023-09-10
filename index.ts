@@ -47,38 +47,34 @@ class Bnnuy
 {
 	private readonly middlewares: MiddlewareEntry[] = [];
 
-	private headers: HeadersInit = {};
+	private headers: Headers = new Headers();
 	private compression: boolean = false;
 
 
 	constructor(options: BnnuyOptions = {})
 	{
-		this.headers = {
-			'X-Powered-By': 'Bnnuy',
-			'X-Ua-Compatible': 'IE=Edge',
-			'X-Xss-Protection': '0; mode=block',
-			'X-Content-Type-Options': 'nosniff'
-		};
+		this.headers.set('X-Powered-By', 'Bnnuy');
+		this.headers.set('X-Ua-Compatible', 'IE=Edge');
+		this.headers.set('X-Xss-Protection', '0; mode=block');
+		this.headers.set('X-Content-Type-Options', 'nosniff');
+
 
 		this.compression = options.compression ?? false;
 
 		if (options.cors ?? true) {
-			this.headers = {
-				...this.headers,
-				'Access-Control-Allow-Origin': '*',
-				'Cross-Origin-Opener-Policy': 'same-origin',
-				'Cross-Origin-Resource-Policy': 'same-origin'
-			};
+			this.headers.set('Access-Control-Allow-Origin', 'self');
+			this.headers.set('Cross-Origin-Opener-Policy', 'same-origin');
+			this.headers.set('Cross-Origin-Resource-Policy', 'same-origin');
 		}
 
 
 		if (options.xPoweredBy !== undefined) {
 
 			if (typeof options.xPoweredBy === 'string') {
-				this.headers['X-Powered-By'] = options.xPoweredBy;
+				this.headers.set('X-Powered-By', options.xPoweredBy);
 
 			} else if (options.xPoweredBy === false) {
-				delete this.headers['X-Powered-By'];
+				this.headers.delete('X-Powered-By');
 			}
 		}
 	}
@@ -114,9 +110,42 @@ class Bnnuy
 
 	private prepareResponse(res: BnnuyResponse)
 	{
-		const response = res.getResponse(this.headers);
+		var body = res.getBody();
+		var headers = res.getHeaders();
+		const status = res.getStatusCode();
 
-		return response;
+		for (const [key, value] of this.headers) {
+			headers.set(key, value);
+		}
+
+		if (!headers.has('Content-Type')) {
+			if (typeof body === 'string') {
+				headers.set('Content-Type', 'text/html; charset=utf-8');
+			}
+		}
+
+
+		if (this.compression && body !== null) {
+			const temporalResponse = new Response(body, {
+				status,
+				headers
+			});
+
+
+			if (!temporalResponse.headers.has('Content-Type')) {
+				headers.set('Content-Type', temporalResponse.headers.get('Content-Type') ?? 'text/html; charset=utf-8');
+			}
+			headers.set('Content-Encoding', 'gzip');
+
+
+			body = Bun.gzipSync(Buffer.from(body.toString()));
+		}
+
+
+		return new Response(body, {
+			status,
+			headers
+		});
 	}
 
 
@@ -229,6 +258,17 @@ class Bnnuy
 	}
 
 
+	private getHTTPCodeResponse(res: BnnuyResponse, status: number, message: string): BnnuyResponse
+	{
+		res.status(status).send(
+			'<!DOCTYPE html>' +
+			'<html lang="en">' +
+			`<title>${status}</title>` +
+			`<p>${message}</p>`
+		);
+
+		return res;
+	}
 
 
 	/**
@@ -239,8 +279,7 @@ class Bnnuy
 	 */
 	public async listen(port: number | string, callback: ((server: Server) => void) | undefined = undefined)
 	{
-		const prepareResponse = this.prepareResponse.bind(this);
-		const middlewares = this.middlewares;
+		const self = this;
 
 
 		const server = Bun.serve({
@@ -254,7 +293,7 @@ class Bnnuy
 				{
 					const res: BnnuyResponse = new BnnuyResponse();
 
-					for (const entry of middlewares)
+					for (const entry of self.middlewares)
 					{
 						switch (entry.type) {
 							case 'static': // Handle static files
@@ -274,14 +313,14 @@ class Bnnuy
 
 										if (file !== undefined) {
 											if (file === 403) {
-												res.status(403).send('Forbidden');
+												self.getHTTPCodeResponse(res, 403, 'Forbidden');
 
-												return resolve(prepareResponse(res));
+												return resolve(self.prepareResponse(res));
 											}
 
 											res.status(200).send(Bun.file(file));
 
-											return resolve(prepareResponse(res));
+											return resolve(self.prepareResponse(res));
 										}
 									}
 								} catch (e) {
@@ -310,7 +349,7 @@ class Bnnuy
 											continue;
 										}
 
-										return resolve(prepareResponse(res));
+										return resolve(self.prepareResponse(res));
 									}
 								} catch (e) {
 									return reject(e);
@@ -319,8 +358,8 @@ class Bnnuy
 						}
 					}
 
-					res.status(404).send('Not Found');
-					return resolve(prepareResponse(res));
+					self.getHTTPCodeResponse(res, 404, 'Not Found');
+					return resolve(self.prepareResponse(res));
 				});
 			}
 		});

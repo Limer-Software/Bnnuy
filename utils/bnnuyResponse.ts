@@ -13,7 +13,7 @@ class BnnuyResponse
 {
 	public locals: { [key: string]: any } = {};
 
-	private headers: { [key: string]: string } = {};
+	private headers: Headers = new Headers();
 	private body: BnnuyResponseBody = null;
 	private statusCode: number = 200;
 
@@ -32,7 +32,7 @@ class BnnuyResponse
 			throw new Error('The response is already ready to send.');
 		}
 		
-		this.headers[name] = value;
+		this.headers.set(name, value);
 		return this;
 	}
 
@@ -47,7 +47,7 @@ class BnnuyResponse
 		}
 
 		for (const name in headers) {
-			this.headers[name] = headers[name];
+			this.headers.set(name, headers[name]);
 		}
 
 		return this;
@@ -72,7 +72,7 @@ class BnnuyResponse
 	}
 
 
-	public getHeaders(): HeadersInit
+	public getHeaders(): Headers
 	{
 		return this.headers;
 	}
@@ -97,7 +97,7 @@ class BnnuyResponse
 	/**
 	 * Returns a Bun Response object.
 	 */
-	public getResponse(headers: HeadersInit): Response
+	public getResponse(headers: Headers): Response
 	{
 		if (!this.readyToSend) {
 			throw new Error('The response is not ready to send.');
