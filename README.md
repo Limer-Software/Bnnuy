@@ -19,10 +19,10 @@ Here we have a simple example of a Hello World server, which listens on port 300
 import bnnuy from 'bnnuy';
 
 bnnuy()
-	.get('/', async (_req, res) => {
-		res.send('Hello World!');
-	})
-	.listen(3000);
+    .get('/', async (_req, res) => {
+        res.send('Hello World!');
+    })
+    .listen(3000);
 ```
 
 
@@ -32,11 +32,11 @@ And now here's another example, but this time we're serving static files from th
 import bnnuy from 'bnnuy';
 
 bnnuy()
-	.static('public').
-	.get('/', async (_req, res) => {
-		res.send('Hello World!');
-	})
-	.listen(3000);
+    .static('public').
+    .get('/', async (_req, res) => {
+        res.send('Hello World!');
+    })
+    .listen(3000);
 ```
 
 This still looks pretty much the same to Express, but the static middleware is actually a `static middleware`,
