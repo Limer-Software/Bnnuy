@@ -160,9 +160,8 @@ class Bnnuy
 
 		(async () => {
 			await staticMiddleware.loadPaths(options);
+			this.addMiddleware('static', staticMiddleware);
 		})();
-
-		this.addMiddleware('static', staticMiddleware);
 
 		return this;
 	}
@@ -289,7 +288,7 @@ class Bnnuy
 
 		const server = Bun.serve({
 			port: port,
-			async fetch(req)
+			async fetch(req, server)
 			{
 				const res: BnnuyResponse = new BnnuyResponse();
 				const url = new URL(req.url);
