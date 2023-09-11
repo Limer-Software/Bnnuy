@@ -154,12 +154,17 @@ class Bnnuy
 	 * @param path The path to the directory.
 	 * @param options Options for serving static files.
 	 */
-	public async static(path: string, options: ServeStaticOptions = {})
+	public static(path: string, options: ServeStaticOptions = {}): Bnnuy
 	{
 		const staticDirectory = new StaticDirectory(path);
-		await staticDirectory.loadPaths(options);
+
+		(async () => {
+			await staticDirectory.loadPaths(options);
+		})();
 
 		this.addMiddleware('static', staticDirectory);
+
+		return this;
 	}
 
 
@@ -286,12 +291,13 @@ class Bnnuy
 			port: port,
 			async fetch(req)
 			{
+				const res: BnnuyResponse = new BnnuyResponse();
 				const url = new URL(req.url);
 
+				res.locals.ping = Bun.nanoseconds();
 
 				return new Promise<Response>(async (resolve, reject) =>
 				{
-					const res: BnnuyResponse = new BnnuyResponse();
 
 					for (const entry of self.middlewares)
 					{
