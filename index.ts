@@ -8,9 +8,9 @@
 
 import { minimatch } from 'minimatch';
 import BnnuyResponse from './utils/bnnuyResponse';
-import Middleware, { BnnuyHandler, BnnuyMethods, BnnuyMiddlewareResponse } from './utils/middleware';
-import MiddlewareBase from './utils/middlewareBase';
-import StaticDirectory, { ServeStaticOptions } from './utils/staticDirectory';
+import Middleware, { BnnuyHandler, BnnuyMethods, BnnuyMiddlewareResponse } from './middlewares/middleware';
+import MiddlewareBase from './middlewares/middlewareBase';
+import StaticMiddleware, { ServeStaticOptions } from './middlewares/staticMiddleware';
 import { Server } from 'bun';
 
 
@@ -39,7 +39,7 @@ interface MiddlewareEntry
 {
 	type: MiddlewareKey;
 	paths: string[];
-	values: (Middleware | StaticDirectory)[];
+	values: (Middleware | StaticMiddleware)[];
 }
 
 
@@ -80,7 +80,7 @@ class Bnnuy
 	}
 
 
-	private addMiddleware(type: MiddlewareKey, ...middlewares: (Middleware | StaticDirectory)[])
+	private addMiddleware(type: MiddlewareKey, ...middlewares: (Middleware | StaticMiddleware)[])
 	{
 		const lastEntry: MiddlewareEntry | undefined = this.middlewares.length ?
 														this.middlewares[this.middlewares.length - 1] :
@@ -88,8 +88,8 @@ class Bnnuy
 
 		const paths: string[] = [];
 
-		for (const staticDirectory of middlewares as MiddlewareBase[]) {
-			paths.push(...staticDirectory.getPaths());
+		for (const StaticMiddleware of middlewares as MiddlewareBase[]) {
+			paths.push(...StaticMiddleware.getPaths());
 		}
 
 
@@ -156,13 +156,13 @@ class Bnnuy
 	 */
 	public static(path: string, options: ServeStaticOptions = {}): Bnnuy
 	{
-		const staticDirectory = new StaticDirectory(path);
+		const staticMiddleware = new StaticMiddleware(path);
 
 		(async () => {
-			await staticDirectory.loadPaths(options);
+			await staticMiddleware.loadPaths(options);
 		})();
 
-		this.addMiddleware('static', staticDirectory);
+		this.addMiddleware('static', staticMiddleware);
 
 		return this;
 	}
@@ -282,7 +282,7 @@ class Bnnuy
 	 * @param callback A callback function to be called when the server starts listening.
 	 * @returns The resulting server.
 	 */
-	public async listen(port: number | string, callback: ((server: Server) => void) | undefined = undefined)
+	public async listen(port: number | string, callback?: (server: Server) => void)
 	{
 		const self = this;
 
@@ -314,8 +314,8 @@ class Bnnuy
 
 
 								try {
-									for (const staticDirectory of entry.values as StaticDirectory[]) {
-										const file = staticDirectory.get(url.pathname);
+									for (const StaticMiddleware of entry.values as StaticMiddleware[]) {
+										const file = StaticMiddleware.get(url.pathname);
 
 										if (file !== undefined) {
 											if (file === 403) {

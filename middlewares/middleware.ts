@@ -8,7 +8,7 @@
 
 import { minimatch } from "minimatch";
 
-import BnnuyResponse from "./bnnuyResponse";
+import BnnuyResponse from "../utils/bnnuyResponse";
 import MiddlewareBase from "./middlewareBase";
 
 

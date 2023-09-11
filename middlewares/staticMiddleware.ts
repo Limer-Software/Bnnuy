@@ -31,7 +31,7 @@ export interface ServeStaticOptions
 }
 
 
-class StaticDirectory implements MiddlewareBase
+class StaticMiddleware implements MiddlewareBase
 {
 	private path: string;
 
@@ -44,7 +44,8 @@ class StaticDirectory implements MiddlewareBase
 		this.path = path;
 
 		watch(path, { recursive: true }, async (event, filename) => {
-			await this.loadPaths();
+			// await this.loadPaths();
+			console.log(`[static] ${event} ${filename}`);
 		});
 	}
 
@@ -124,4 +125,4 @@ class StaticDirectory implements MiddlewareBase
 }
 
 
-export default StaticDirectory;
+export default StaticMiddleware;
