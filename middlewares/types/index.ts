@@ -15,6 +15,7 @@ export type Response = Omit<BnnuyResponse, 'getResponse'>;
 export type Request = BnnuyRequest;
 
 export type BnnuyHandler = (req: Request, res: Response, next: NextFunction) => Promise<void>;
+export type BnnuyRoutingHandler = (req: Request, res: Response) => Promise<void>;
 
 
 export enum BnnuyMethods
