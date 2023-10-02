@@ -71,6 +71,8 @@ class BnnuyRequest
 		this.__url = new URL(req.url);
 		this.__body = new BnnuyBodyConsumer(req);
 		this.__params = {};
+
+		this.headers = req.headers;
 	}
 
 
