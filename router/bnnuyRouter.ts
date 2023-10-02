@@ -9,6 +9,13 @@ import { BnnuyRoutingHandler } from '../middlewares/types';
 import { BnnuyRouterNode } from './bnnuyRouterNode';
 
 
+export interface BnnuyRouterResponse
+{
+	handler: BnnuyRoutingHandler;
+	params: Map<string, string>;
+}
+
+
 export class BnnuyRouter
 {
 	private root: BnnuyRouterNode = new BnnuyRouterNode('/');
@@ -114,14 +121,21 @@ export class BnnuyRouter
 		}
 	}
 
-	public get(path: string): BnnuyRoutingHandler | undefined
+	public get(path: string): BnnuyRouterResponse | undefined
 	{
 		if (typeof path !== 'string') {
 			throw new TypeError('The path must be a string.');
 		}
 
 		if (path === '/') {
-			return this.root.handler;
+			if (!this.root.handler) {
+				return undefined;
+			}
+
+			return {
+				handler: this.root.handler,
+				params: new Map()
+			};
 		}
 
 
@@ -140,6 +154,7 @@ export class BnnuyRouter
 		const parts = path.split('/');
 
 		var pointer = this.root;
+		const params = new Map<string, string>();
 
 		for (const part of parts) {
 			if (part === '') {
@@ -152,12 +167,21 @@ export class BnnuyRouter
 
 			} else if (pointer.dynamicChild) {
 				pointer = pointer.dynamicChild;
+				params.set(pointer.name, part);
 
 			} else {
 				return undefined;
 			}
 		}
 
-		return pointer.handler;
+
+		if (!pointer.handler) {
+			return undefined;
+		}
+
+		return {
+			handler: pointer.handler,
+			params: params
+		};
 	}
 }
