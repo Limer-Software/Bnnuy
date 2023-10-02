@@ -12,7 +12,7 @@ import { BnnuyRouterNode } from './bnnuyRouterNode';
 export interface BnnuyRouterResponse
 {
 	handler: RoutingHandler;
-	params: Map<string, string>;
+	params: { [key: string]: string };
 }
 
 
@@ -134,7 +134,7 @@ export class BnnuyRouter
 
 			return {
 				handler: this.root.handler,
-				params: new Map()
+				params: {}
 			};
 		}
 
@@ -154,7 +154,7 @@ export class BnnuyRouter
 		const parts = path.split('/');
 
 		var pointer = this.root;
-		const params = new Map<string, string>();
+		const params: { [key: string]: string } = {};
 
 		for (const part of parts) {
 			if (part === '') {
@@ -167,7 +167,7 @@ export class BnnuyRouter
 
 			} else if (pointer.dynamicChild) {
 				pointer = pointer.dynamicChild;
-				params.set(pointer.name, part);
+				params[pointer.name] = part;
 
 			} else {
 				return undefined;

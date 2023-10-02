@@ -348,6 +348,7 @@ class Bnnuy
 
 								if (response) {
 									try {
+										req.setParams(response.params);
 										await response.handler(req, res);
 
 										return resolve(self.prepareResponse(res));

@@ -104,6 +104,11 @@ class BnnuyRequest
 	{
 		return this.__raw.headers.get('x-forwarded-for') ?? 'unknown';
 	}
+
+	public setParams(params: { [key: string]: string }): void
+	{
+		this.__params = params;
+	}
 }
 
 export default BnnuyRequest;
