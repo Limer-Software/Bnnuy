@@ -5,13 +5,13 @@
 	Licensed under LGPLv3 <https://www.gnu.org/licenses/lgpl-3.0.txt>
 */
 
-import { BnnuyRoutingHandler } from '../middlewares/types';
+import { RoutingHandler } from '../middlewares/types';
 import { BnnuyRouterNode } from './bnnuyRouterNode';
 
 
 export interface BnnuyRouterResponse
 {
-	handler: BnnuyRoutingHandler;
+	handler: RoutingHandler;
 	params: Map<string, string>;
 }
 
@@ -21,7 +21,7 @@ export class BnnuyRouter
 	private root: BnnuyRouterNode = new BnnuyRouterNode('/');
 
 
-	public add(path: string, handler: BnnuyRoutingHandler): void
+	public add(path: string, handler: RoutingHandler): void
 	{
 		if (typeof path !== 'string') {
 			throw new TypeError('The path must be a string.');

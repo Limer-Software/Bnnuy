@@ -8,10 +8,12 @@
 
 import { minimatch } from 'minimatch';
 import BnnuyResponse from './utils/bnnuyResponse';
-import Middleware, { BnnuyHandler, BnnuyMethods, BnnuyMiddlewareResponse } from './middlewares/middleware';
-import MiddlewareBase from './middlewares/middlewareBase';
-import StaticMiddleware, { ServeStaticOptions } from './middlewares/staticMiddleware';
+import Middleware from './middlewares/classic';
+import RouterMiddleware from './middlewares/router';
+import StaticMiddleware, { ServeStaticOptions } from './middlewares/static';
 import { Server } from 'bun';
+import { Handler, Methods, Request, RoutingHandler } from './middlewares/types';
+import BnnuyRequest from './utils/bnnuyRequest';
 
 
 interface BnnuyOptions
@@ -33,14 +35,29 @@ interface BnnuyOptions
 	cors?: boolean;
 }
 
-type MiddlewareKey = 'middleware' | 'static' | 'routing';
 
-interface MiddlewareEntry
+
+interface ClassicMiddlewareEntry
 {
-	type: MiddlewareKey;
-	paths: string[];
-	values: (Middleware | StaticMiddleware)[];
+	type: 'middleware';
+	value: Middleware;
 }
+
+interface RouterMiddlewareEntry
+{
+	type: 'router';
+	value: RouterMiddleware;
+}
+
+interface StaticMiddlewareEntry
+{
+	type: 'static';
+	value: StaticMiddleware;
+}
+
+type MiddlewareEntry = ClassicMiddlewareEntry | RouterMiddlewareEntry | StaticMiddlewareEntry;
+type MiddlewareKey = 'middleware' | 'router' | 'static';
+
 
 
 class Bnnuy
@@ -77,34 +94,6 @@ class Bnnuy
 				this.headers.delete('X-Powered-By');
 			}
 		}
-	}
-
-
-	private addMiddleware(type: MiddlewareKey, ...middlewares: (Middleware | StaticMiddleware)[])
-	{
-		const lastEntry: MiddlewareEntry | undefined = this.middlewares.length ?
-														this.middlewares[this.middlewares.length - 1] :
-														undefined;
-
-		const paths: string[] = [];
-
-		for (const StaticMiddleware of middlewares as MiddlewareBase[]) {
-			paths.push(...StaticMiddleware.getPaths());
-		}
-
-
-		if (lastEntry !== undefined && lastEntry.type === type) {
-			lastEntry.values.push(...middlewares);
-			lastEntry.paths.push(...paths);
-
-			return;
-		}
-
-		this.middlewares.push({
-			type,
-			paths,
-			values: middlewares
-		});
 	}
 
 
@@ -156,108 +145,134 @@ class Bnnuy
 	 */
 	public static(path: string, options: ServeStaticOptions = {}): Bnnuy
 	{
-		const staticMiddleware = new StaticMiddleware(path);
+		const middleware = new StaticMiddleware(path);
 
 		(async () => {
-			await staticMiddleware.loadPaths(options);
-			this.addMiddleware('static', staticMiddleware);
+			await middleware.loadPaths(options);
 		})();
+
+		this.middlewares.push({
+			type: 'static',
+			value: middleware
+		});
+
 
 		return this;
 	}
 
-
-	private route(method: BnnuyMethods, path: string | string[], ...handlers: BnnuyHandler[])
+	private route(method: Methods, path: string | string[], handler: RoutingHandler)
 	{
 		if (typeof path === 'string') {
 			path = [ path ];
 		}
 
-		this.addMiddleware('routing', new Middleware(method, path, ...handlers));
-	}
+		const lastEntry = this.middlewares[this.middlewares.length - 1];
 
-	private middleware(path: string | string[], ...handlers: BnnuyHandler[])
-	{
-		if (typeof path === 'string') {
-			path = [ path ];
+		if (!lastEntry || lastEntry.type !== 'router') {
+			const middleware = new RouterMiddleware();
+			
+			middleware.add(method, path, handler);
+
+			this.middlewares.push({
+				type: 'router',
+				value: middleware
+			});
+
+			return;
 		}
 
-		this.addMiddleware('middleware', new Middleware('ANY', path, ...handlers));
+
+		lastEntry.value.add(method, path, handler);
 	}
 
 	/**
 	 * Add a middleware.
-	 * @param handlers The handlers to add.
+	 * @param handler The handler to add.
 	 */
-	public use(...handlers: BnnuyHandler[]): Bnnuy
+	public use(...handlers: Handler[]): Bnnuy
 	{
-		this.middleware('*', ...handlers);
+		const lastEntry = this.middlewares[this.middlewares.length - 1];
+
+		if (!lastEntry || lastEntry.type !== 'middleware') {
+			const middleware = new Middleware(...handlers);
+
+			this.middlewares.push({
+				type: 'middleware',
+				value: middleware
+			});
+
+			return this;
+		}
+
+		lastEntry.value.add(...handlers);
+
 		return this;
 	}
+
 
 	/**
 	 * Add a middleware for a specific method.
 	 * @param method The method to add the middleware to.
-	 * @param handlers The handlers to add.
+	 * @param handler The handler to add.
 	 */
-	public all(route: string | string[], ...handlers: BnnuyHandler[]): Bnnuy
+	public all(route: string | string[], handler: RoutingHandler): Bnnuy
 	{
-		this.route('ANY', route, ...handlers);
+		this.route('ANY', route, handler);
 		return this;
 	}
 
 	/**
 	 * Add a middleware for the GET method.
 	 * @param route The route to add the middleware to.
-	 * @param handlers The handlers to add.
+	 * @param handler The handler to add.
 	 */
-	public get(route: string | string[], ...handlers: BnnuyHandler[]): Bnnuy
+	public get(route: string | string[], handler: RoutingHandler): Bnnuy
 	{
-		this.route('GET', route, ...handlers);
+		this.route('GET', route, handler);
 		return this;
 	}
 
 	/**
 	 * Add a middleware for the POST method.
 	 * @param route The route to add the middleware to.
-	 * @param handlers The handlers to add.
+	 * @param handler The handler to add.
 	 */
-	public post(route: string | string[], ...handlers: BnnuyHandler[]): Bnnuy
+	public post(route: string | string[], handler: RoutingHandler): Bnnuy
 	{
-		this.route('GET', route, ...handlers);
+		this.route('GET', route, handler);
 		return this;
 	}
 
 	/**
 	 * Add a middleware for the PUT method.
 	 * @param route The route to add the middleware to.
-	 * @param handlers The handlers to add.
+	 * @param handler The handler to add.
 	 */
-	public put(route: string | string[], ...handlers: BnnuyHandler[]): Bnnuy
+	public put(route: string | string[], handler: RoutingHandler): Bnnuy
 	{
-		this.route('PUT', route, ...handlers);
+		this.route('PUT', route, handler);
 		return this;
 	}
 
 	/**
 	 * Add a middleware for the DELETE method.
 	 * @param route The route to add the middleware to.
-	 * @param handlers The handlers to add.
+	 * @param handler The handler to add.
 	 */
-	public delete(route: string | string[], ...handlers: BnnuyHandler[]): Bnnuy
+	public delete(route: string | string[], handler: RoutingHandler): Bnnuy
 	{
-		this.route('DELETE', route, ...handlers);
+		this.route('DELETE', route, handler);
 		return this;
 	}
 
 	/**
 	 * Add a middleware for the HEAD method.
 	 * @param route The route to add the middleware to.
-	 * @param handlers The handlers to add.
+	 * @param handler The handler to add.
 	 */
-	public head(route: string | string[], ...handlers: BnnuyHandler[]): Bnnuy
+	public head(route: string | string[], handler: RoutingHandler): Bnnuy
 	{
-		this.route('HEAD', route, ...handlers);
+		this.route('HEAD', route, handler);
 		return this;
 	}
 
@@ -268,7 +283,7 @@ class Bnnuy
 			'<!DOCTYPE html>' +
 			'<html lang="en">' +
 			`<title>${status}</title>` +
-			`<p>${message}</p>`
+			`<p>${Bun.escapeHTML(message)}</p>`
 		);
 
 		return res;
@@ -288,78 +303,74 @@ class Bnnuy
 
 		const server = Bun.serve({
 			port: port,
-			async fetch(req, server)
+			async fetch(request, server)
 			{
 				const res: BnnuyResponse = new BnnuyResponse();
-				const url = new URL(req.url);
+				const req: BnnuyRequest = new BnnuyRequest(request);
 
 				res.locals.ping = Bun.nanoseconds();
 
+
 				return new Promise<Response>(async (resolve, reject) =>
 				{
-
 					for (const entry of self.middlewares)
 					{
 						switch (entry.type) {
 							case 'static': // Handle static files
-								if (req.method !== 'GET') {
+								if (request.method !== 'GET') {
 									continue;
 								}
 
-								// Rapidly check if the path is in the list of paths
-								if (!entry.paths.includes(url.pathname)) {
-									continue;
-								}
+								const file = entry.value.get(req.url.pathname);
 
-
-								try {
-									for (const StaticMiddleware of entry.values as StaticMiddleware[]) {
-										const file = StaticMiddleware.get(url.pathname);
-
-										if (file !== undefined) {
-											if (file === 403) {
-												self.getHTTPCodeResponse(res, 403, 'Forbidden');
-
-												return resolve(self.prepareResponse(res));
-											}
-
-											res.status(200).send(Bun.file(file));
+								if (file) {	
+									try {
+										if (file === 403) {
+											self.getHTTPCodeResponse(res, 403, 'Forbidden');
 
 											return resolve(self.prepareResponse(res));
 										}
+
+										res.status(200).send(Bun.file(file));
+
+										return resolve(self.prepareResponse(res));
+										
+									} catch (e) {
+										return reject(e);
 									}
-								} catch (e) {
-									return reject(e);
 								}
+
 								break;
 
-							case 'routing': // Handle routing
-								const paths = entry.paths.filter(p => {
-									return minimatch(url.pathname, p);
-								});
+							case 'router': // Handle routing
+								const response = entry.value.get(request.method.toUpperCase() as Methods,
+																req.url.pathname);
 
-								if (paths.length === 0) {
-									continue;
+								if (response) {
+									try {
+										await response.handler(req, res);
+
+										return resolve(self.prepareResponse(res));
+									} catch (e) {
+										return reject(e);
+									}
 								}
 
-								// Fallback
+								break;
 
 							case 'middleware': // Handle middleware
 								try {
-									for (const middleware of entry.values as Middleware[]) {
-										const shouldFallback = await middleware.handle(req,
-																					   res as BnnuyMiddlewareResponse);
+									const fallback = await entry.value.handle(req, res);
 
-										if (shouldFallback) {
-											continue;
-										}
-
-										return resolve(self.prepareResponse(res));
+									if (fallback) {
+										continue;
 									}
+
+									return resolve(self.prepareResponse(res));
+
 								} catch (e) {
 									return reject(e);
 								}
-								break;
 						}
 					}
 
