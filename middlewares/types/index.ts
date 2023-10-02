@@ -12,7 +12,7 @@ import BnnuyResponse from '../../utils/bnnuyResponse';
 
 export type NextFunction = () => void;
 export type Response = Omit<BnnuyResponse, 'getResponse'>;
-export type Request = Omit<BnnuyRequest, 'setParams'>;
+export type Request = Omit<BnnuyRequest, 'setParams' | 'setNanoseconds'>;
 
 export type Handler = (req: Request, res: Response, next: NextFunction) => Promise<void>;
 export type RoutingHandler = (req: Request, res: Response) => Promise<void>;

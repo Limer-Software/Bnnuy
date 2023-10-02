@@ -308,7 +308,7 @@ class Bnnuy
 				const res: BnnuyResponse = new BnnuyResponse();
 				const req: BnnuyRequest = new BnnuyRequest(request);
 
-				res.locals.ping = Bun.nanoseconds();
+				req.setNanoseconds(Bun.nanoseconds());
 
 
 				return new Promise<Response>(async (resolve, reject) =>

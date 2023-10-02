@@ -63,6 +63,8 @@ class BnnuyRequest
 	private __body: BnnuyBodyConsumer;
 	private __params: { [key: string]: string };
 
+	private __nanoseconds: number = 0;
+
 
 	constructor(req: Request)
 	{
@@ -107,9 +109,20 @@ class BnnuyRequest
 		return this.__raw.headers.get('x-forwarded-for') ?? 'unknown';
 	}
 
+	public get nanoseconds(): number
+	{
+		return this.__nanoseconds;
+	}
+
+
 	public setParams(params: { [key: string]: string }): void
 	{
 		this.__params = params;
+	}
+
+	public setNanoseconds(nanoseconds: number): void
+	{
+		this.__nanoseconds = nanoseconds;
 	}
 }
 
