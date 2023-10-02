@@ -8,25 +8,19 @@
 import { BnnuyRoutingHandler } from "../middlewares/types";
 
 
-export class BnnuyRouterDynamicNode
+export class BnnuyRouterNode
 {
 	public name: string;
+	public isDynamic: boolean;
 
 	public handler?: BnnuyRoutingHandler;
-	public staticChildren?: BnnuyRouterNode;
+	public children: Map<string, BnnuyRouterNode> = new Map();
 	public dynamicChild?: BnnuyRouterNode;
 
 
-	public constructor(name: string)
+	public constructor(name: string, isDynamic: boolean = false)
 	{
 		this.name = name;
+		this.isDynamic = isDynamic;
 	}
-}
-
-
-export class BnnuyRouterNode
-{
-	public handler?: BnnuyRoutingHandler;
-	public staticChildren?: Map<string, BnnuyRouterNode>;
-	public dynamicChild?: BnnuyRouterDynamicNode;
 }
