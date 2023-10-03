@@ -105,63 +105,6 @@ class Bnnuy
 	}
 
 
-	private async prepareResponse(req: BnnuyRequest, res: BnnuyResponse)
-	{
-		var body = res.getBody();
-		const status = res.getStatusCode();
-
-		if (status >= 400 && status <= 599 && !body) {
-			if (this.errorHandler) {
-				try {
-					const message = httpCodeToText(status);
-
-					const error: HTTPError = {
-						status,
-						message
-					};
-	
-					await this.errorHandler(error, req, res);
-					body = res.getBody();
-
-				} catch (e) {
-					throw e;
-				}
-			}
-		}
-
-		var headers = res.getHeaders();
-
-		if (!headers.has('Content-Type')) {
-			if (typeof body === 'string') {
-				headers.set('Content-Type', 'text/html; charset=utf-8');
-			}
-		}
-
-
-		if (this.compression && body !== null) {
-			const temporalResponse = new Response(body, {
-				status,
-				headers
-			});
-
-
-			if (!temporalResponse.headers.has('Content-Type')) {
-				headers.set('Content-Type', temporalResponse.headers.get('Content-Type') ?? 'text/html; charset=utf-8');
-			}
-			headers.set('Content-Encoding', 'gzip');
-
-
-			body = Bun.gzipSync(Buffer.from(body.toString()));
-		}
-
-
-		return new Response(body, {
-			status,
-			headers
-		});
-	}
-
-
 	/**
 	 * Serve static files from a directory. It will automatically watch for changes and reload the paths.
 	 * @param path The path to the directory.
@@ -330,6 +273,62 @@ class Bnnuy
 		);
 
 		return res;
+	}
+
+	private async prepareResponse(req: BnnuyRequest, res: BnnuyResponse)
+	{
+		var body = res.getBody();
+		const status = res.getStatusCode();
+
+		if (status >= 400 && status <= 599 && !body) {
+			if (this.errorHandler) {
+				try {
+					const message = httpCodeToText(status);
+
+					const error: HTTPError = {
+						status,
+						message
+					};
+	
+					await this.errorHandler(error, req, res);
+					body = res.getBody();
+
+				} catch (e) {
+					throw e;
+				}
+			}
+		}
+
+		var headers = res.getHeaders();
+
+		if (!headers.has('Content-Type')) {
+			if (typeof body === 'string') {
+				headers.set('Content-Type', 'text/html; charset=utf-8');
+			}
+		}
+
+
+		if (this.compression && body !== null) {
+			const temporalResponse = new Response(body, {
+				status,
+				headers
+			});
+
+
+			if (!temporalResponse.headers.has('Content-Type')) {
+				headers.set('Content-Type', temporalResponse.headers.get('Content-Type') ?? 'text/html; charset=utf-8');
+			}
+			headers.set('Content-Encoding', 'gzip');
+
+
+			body = Bun.gzipSync(Buffer.from(body.toString()));
+		}
+
+
+		return new Response(body, {
+			status,
+			headers
+		});
 	}
 
 	
