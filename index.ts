@@ -6,13 +6,12 @@
 */
 
 
-import { minimatch } from 'minimatch';
 import BnnuyResponse from './utils/bnnuyResponse';
 import Middleware from './middlewares/classic';
 import RouterMiddleware from './middlewares/router';
 import StaticMiddleware, { ServeStaticOptions } from './middlewares/static';
 import { Server } from 'bun';
-import { Handler, Methods, Request, RoutingHandler } from './middlewares/types';
+import { ErrorHandler, HTTPError, Handler, Methods, Request, RoutingHandler, httpCodeToText } from './middlewares/types';
 import BnnuyRequest from './utils/bnnuyRequest';
 
 
@@ -56,13 +55,13 @@ interface StaticMiddlewareEntry
 }
 
 type MiddlewareEntry = ClassicMiddlewareEntry | RouterMiddlewareEntry | StaticMiddlewareEntry;
-type MiddlewareKey = 'middleware' | 'router' | 'static';
 
 
 
 class Bnnuy
 {
 	private readonly middlewares: MiddlewareEntry[] = [];
+	private errorHandler?: ErrorHandler;
 
 	private headers: Headers = new Headers();
 	private compression: boolean = false;
@@ -97,15 +96,36 @@ class Bnnuy
 	}
 
 
-	private prepareResponse(res: BnnuyResponse)
+	private async prepareResponse(req: BnnuyRequest, res: BnnuyResponse)
 	{
 		var body = res.getBody();
-		var headers = res.getHeaders();
 		const status = res.getStatusCode();
+
+		if (status >= 400 && status <= 599 && !body) {
+			if (this.errorHandler) {
+				try {
+					const message = httpCodeToText(status);
+
+					const error: HTTPError = {
+						status,
+						message
+					};
+	
+					await this.errorHandler(error, req, res);
+					body = res.getBody();
+
+				} catch (e) {
+					throw e;
+				}
+			}
+		}
+
+		var headers = res.getHeaders();
 
 		for (const [key, value] of this.headers) {
 			headers.set(key, value);
 		}
+
 
 		if (!headers.has('Content-Type')) {
 			if (typeof body === 'string') {
@@ -211,17 +231,6 @@ class Bnnuy
 
 
 	/**
-	 * Add a middleware for a specific method.
-	 * @param method The method to add the middleware to.
-	 * @param handler The handler to add.
-	 */
-	public all(route: string | string[], handler: RoutingHandler): Bnnuy
-	{
-		this.route('ANY', route, handler);
-		return this;
-	}
-
-	/**
 	 * Add a middleware for the GET method.
 	 * @param route The route to add the middleware to.
 	 * @param handler The handler to add.
@@ -273,6 +282,36 @@ class Bnnuy
 	public head(route: string | string[], handler: RoutingHandler): Bnnuy
 	{
 		this.route('HEAD', route, handler);
+		return this;
+	}
+
+	/**
+	 * Add a middleware for a specific method.
+	 * @param method The method to add the middleware to.
+	 * @param handler The handler to add.
+	 */
+	public all(route: string | string[], handler: RoutingHandler): Bnnuy
+	{
+		this.get(route, handler);
+		this.post(route, handler);
+		this.put(route, handler);
+		this.delete(route, handler);
+		this.head(route, handler);
+
+		return this;
+	}
+
+	/**
+	 * Add a middleware to handle HTTP error responses.
+	 * @param handler The handler to add.
+	 */
+	public error(handler: ErrorHandler): Bnnuy
+	{
+		if (this.errorHandler) {
+			throw new Error('An error handler is already set.');
+		}
+
+		this.errorHandler = handler;
 		return this;
 	}
 
@@ -328,12 +367,12 @@ class Bnnuy
 										if (file === 403) {
 											self.getHTTPCodeResponse(res, 403, 'Forbidden');
 
-											return resolve(self.prepareResponse(res));
+											return resolve(await self.prepareResponse(req, res));
 										}
 
 										res.status(200).send(Bun.file(file));
 
-										return resolve(self.prepareResponse(res));
+										return resolve(await self.prepareResponse(req, res));
 										
 									} catch (e) {
 										return reject(e);
@@ -351,7 +390,7 @@ class Bnnuy
 										req.setParams(response.params);
 										await response.handler(req, res);
 
-										return resolve(self.prepareResponse(res));
+										return resolve(await self.prepareResponse(req, res));
 									} catch (e) {
 										return reject(e);
 									}
@@ -367,7 +406,7 @@ class Bnnuy
 										continue;
 									}
 
-									return resolve(self.prepareResponse(res));
+									return resolve(await self.prepareResponse(req, res));
 
 								} catch (e) {
 									return reject(e);
@@ -376,7 +415,7 @@ class Bnnuy
 					}
 
 					self.getHTTPCodeResponse(res, 404, 'Not Found');
-					return resolve(self.prepareResponse(res));
+					return resolve(await self.prepareResponse(req, res));
 				});
 			}
 		});

@@ -1,5 +1,6 @@
 # bnnuy
-Bnnuy is a future framework for Bun's HTTP API. It is currently in development and is not ready for use.
+Bnnuy is a future framework for Bun's HTTP API. It is currently in development
+and is not ready for use.
 
 
 ## Philosophy
@@ -11,9 +12,11 @@ Bnnuy has to be:
 
 
 ## Basic syntax
-The syntax is pretty similar to Express, but with a few differences (mainly internally).
+The syntax is pretty similar to Express, but with a few differences
+(mainly internally).
 
-Here we have a simple example of a Hello World server, which listens on port 3000.
+Here we have a simple example of a Hello World server, which listens on port
+3000.
 
 ```ts
 import bnnuy from 'bnnuy';
@@ -26,7 +29,8 @@ bnnuy()
 ```
 
 
-And now here's another example, but this time we're serving static files from the `public` directory.
+And now here's another example, but this time we're serving static files from
+the `public` directory.
 
 ```ts
 import bnnuy from 'bnnuy';
@@ -39,46 +43,73 @@ bnnuy()
     .listen(3000);
 ```
 
-This still looks pretty much the same to Express, but the static middleware is actually a `static middleware`,
-meanwhile, the `get` method is a `routing middleware`.
+This still looks pretty much the same to Express, but the static middleware is
+actually a `static middleware`, meanwhile, the `get` method is a
+`router middleware`.
 
 
 ## Middleware concepts
-To handle requests faster than a normal Middleware based framework, Bnnuy uses a concept called `middleware types`.
+To handle requests faster than a normal Middleware based framework, Bnnuy uses
+a concept called `middleware types`.
 
 These types tells Bnnuy how to handle the middleware, and what to do with it.
 
 
-For now, there are 3 types of middleware:
+For now, there are 4 types of middleware:
 - `basic middleware`
 - `static middleware`
-- `routing middleware`
+- `router middleware`
+- `error middleware`
 
 
 ### Basic middleware
-This middleware is the classic concept of middleware, it's a function that takes 3 arguments: `req`, `res` and `next`.
+This middleware is the classic concept of middleware, it's a function that
+takes 3 arguments: `req`, `res` and `next`.
 
-- `req` is the request object, which contains all the information about the request.
+- `req` is the request object, which contains all the information about the
+    request.
 - `res` is the response object, this tells Bnnuy how to respond to the request.
 - `next` is a function that tells Bnnuy to continue to the next middleware.
 
-These middlewares are called on every request, and are usually used for logging, authentication, etc.
+These middlewares are called on every request, and are usually used for logging,
+authentication, etc.
+
+They're called with any request method, and any path.
 
 ### Static middleware
-As the name suggests, this middleware is used to serve static files. The difference with the basic middleware is that
-it doesn't take a `next` argument, and it's only called if the file exists.
+As the name suggests, this middleware is used to serve static files. The
+difference with the basic middleware is that it doesn't take a `next` argument,
+and it's only called if the file exists.
 
-The O-notation of this middleware is `O(1)`, because it doesn't need to iterate over all the middlewares.
+The O-notation of this middleware is `O(1)`, because it doesn't need to iterate
+over all the middlewares.
+
+They're called only with the `GET` method.
 
 ### Routing middleware
-This middleware is used to handle requests to a specific path. It's similar to the basic middleware, but it doesn't
-take a `next` argument, and it's only called if the path matches the request path.
+This middleware is used to handle requests to a specific path. It's similar to
+the basic middleware, but it doesn't take a `next` argument, and it's only
+called if the path matches the request path.
+
+### Error middleware
+This middleware is used to handle HTTP errors. It's similar to the basic
+middleware, but it takes other arguments: `err`, `req` and `res`.
+
+- `err` is the error object, which contains all the information about the error.
+- `req` is the request object, which contains all the information about the
+    request.
+- `res` is the response object, this tells Bnnuy how to respond to the request.
+
+These middlewares are called only when the response status code is 4xx or 5xx
+and the response body is empty.
 
 
 ## Contributing
 All help is highly appreciated!
 
-You can open an issue or a pull request, and I'll try to respond as soon as possible.
+You can open an issue or a pull request, and I'll try to respond as soon as
+possible.
 
 # License
-This project is licensed under the LGPL-3.0 license. See the [LICENSE](LICENSE) file for more information.
+This project is licensed under the LGPL-3.0 license. See the [LICENSE](LICENSE)
+file for more information.

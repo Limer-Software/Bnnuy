@@ -5,7 +5,7 @@
 	Licensed under LGPLv3 <https://www.gnu.org/licenses/lgpl-3.0.txt>
 */
 
-import { RoutingHandler } from '../middlewares/types';
+import { ErrorHandler, RoutingHandler } from '../middlewares/types';
 import { BnnuyRouterNode } from './bnnuyRouterNode';
 
 

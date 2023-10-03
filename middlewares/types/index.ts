@@ -13,54 +13,60 @@ import BnnuyResponse from '../../utils/bnnuyResponse';
 export type NextFunction = () => void;
 export type Response = Omit<BnnuyResponse, 'getResponse'>;
 export type Request = Omit<BnnuyRequest, 'setParams' | 'setNanoseconds'>;
+export type HTTPError = { status: number, message: string };
 
 export type Handler = (req: Request, res: Response, next: NextFunction) => Promise<void>;
 export type RoutingHandler = (req: Request, res: Response) => Promise<void>;
+export type ErrorHandler = (err: HTTPError, req: Request, res: Response) => Promise<void>;
+
+export type Methods = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD' | 'OPTIONS' | 'CONNECT' | 'TRACE';
 
 
-export type Methods = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD' | 'OPTIONS' | 'CONNECT' | 'TRACE' | 'ANY';
+const codes: { [key: number]: string } = {
+	400: 'Bad Request',
+	401: 'Unauthorized',
+	402: 'Payment Required',
+	403: 'Forbidden',
+	404: 'Not Found',
+	405: 'Method Not Allowed',
+	406: 'Not Acceptable',
+	407: 'Proxy Authentication Required',
+	408: 'Request Timeout',
+	409: 'Conflict',
+	410: 'Gone',
+	411: 'Length Required',
+	412: 'Precondition Failed',
+	413: 'Payload Too Large',
+	414: 'URI Too Long',
+	415: 'Unsupported Media Type',
+	416: 'Range Not Satisfiable',
+	417: 'Expectation Failed',
+	418: `I'm a teapot`,
+	421: 'Misdirected Request',
+	422: 'Unprocessable Content',
+	423: 'Locked',
+	424: 'Failed Dependency',
+	425: 'Too Early',
+	426: 'Upgrade Required',
+	428: 'Precondition Required',
+	429: 'Too Many Requests',
+	431: 'Request Header Fields Too Large',
+	451: 'Unavailable For Legal Reasons',
 
+	500: 'Internal Server Error',
+	501: 'Not Implemented',
+	502: 'Bad Gateway',
+	503: 'Service Unavailable',
+	504: 'Gateway Timeout',
+	505: 'HTTP Version Not Supported',
+	506: 'Variant Also Negotiates',
+	507: 'Insufficient Storage',
+	508: 'Loop Detected',
+	510: 'Not Extended',
+	511: 'Network Authentication Required',
+};
 
-// export enum BnnuyMethods
-// {
-// 	GET = 1 << 0,
-// 	POST = 1 << 1,
-// 	PUT = 1 << 2,
-// 	DELETE = 1 << 3,
-// 	PATCH = 1 << 4,
-// 	HEAD = 1 << 5,
-// 	OPTIONS = 1 << 6,
-// 	CONNECT = 1 << 7,
-// 	TRACE = 1 << 8,
-
-// 	ANY = GET | POST | PUT | DELETE | PATCH | HEAD | OPTIONS | CONNECT | TRACE
-// }
-
-// export function getMethodFromString(method: string): BnnuyMethods
-// {
-// 	switch (method.toUpperCase())
-// 	{
-// 		case 'GET':
-// 			return BnnuyMethods.GET;
-// 		case 'POST':
-// 			return BnnuyMethods.POST;
-// 		case 'PUT':
-// 			return BnnuyMethods.PUT;
-// 		case 'DELETE':
-// 			return BnnuyMethods.DELETE;
-// 		case 'PATCH':
-// 			return BnnuyMethods.PATCH;
-// 		case 'HEAD':
-// 			return BnnuyMethods.HEAD;
-// 		case 'OPTIONS':
-// 			return BnnuyMethods.OPTIONS;
-// 		case 'CONNECT':
-// 			return BnnuyMethods.CONNECT;
-// 		case 'TRACE':
-// 			return BnnuyMethods.TRACE;
-// 		case 'ANY':
-// 			return BnnuyMethods.ANY;
-// 	}
-
-// 	return BnnuyMethods.GET;
-// }
+export function httpCodeToText(code: number): string
+{
+	return codes[code] || 'Unkwnown Code';
+}

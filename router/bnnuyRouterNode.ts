@@ -5,7 +5,7 @@
 	Licensed under LGPLv3 <https://www.gnu.org/licenses/lgpl-3.0.txt>
 */
 
-import { BnnuyRoutingHandler } from "../middlewares/types";
+import { RoutingHandler } from '../middlewares/types';
 
 
 export class BnnuyRouterNode
@@ -13,7 +13,7 @@ export class BnnuyRouterNode
 	public name: string;
 	public isDynamic: boolean;
 
-	public handler?: BnnuyRoutingHandler;
+	public handler?: RoutingHandler;
 	public children: Map<string, BnnuyRouterNode> = new Map();
 	public dynamicChild?: BnnuyRouterNode;
 
