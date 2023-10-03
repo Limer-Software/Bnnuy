@@ -1,6 +1,6 @@
 {
 	"name": "bnnuy",
-	"version": "0.3.3-1",
+	"version": "0.3.4-1",
 	"module": "index.ts",
 	"type": "module",
 	"description": "A fast, lightweight, simple, and easy to use framework for Bun's HTTP API.",
@@ -57,6 +57,6 @@
 	},
 
 	"engines": {
-		"bun": ">=1.0.1"
+		"bun": ">=1.0.4"
 	}
 }

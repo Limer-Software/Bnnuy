@@ -18,11 +18,13 @@ class RouterMiddleware
 
 	public add(method: Methods, paths: string[], handler: RoutingHandler): void
 	{
-		for (const path of paths) {
-			if (!this.routes.has(method)) {
-				this.routes.set(method, new BnnuyRouter());
-			}
-	
+		console.log(method, paths);
+
+		if (!this.routes.has(method)) {
+			this.routes.set(method, new BnnuyRouter());
+		}
+
+		for (const path of paths) {	
 			this.routes.get(method)?.add(path, handler);
 		}
 	}

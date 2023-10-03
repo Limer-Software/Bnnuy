@@ -70,6 +70,7 @@ class BnnuyRequest
 	private __url: URL;
 	private __body: BnnuyBodyConsumer;
 	private __params: ParamsDictionary;
+	private __ip: string;
 
 	private __nanoseconds: number = 0;
 
@@ -81,6 +82,7 @@ class BnnuyRequest
 		this.__url = new URL(req.url);
 		this.__body = new BnnuyBodyConsumer(req);
 		this.__params = {};
+		this.__ip = '';
 
 		this.headers = req.headers;
 	}
@@ -114,7 +116,7 @@ class BnnuyRequest
 
 	public get ip(): string
 	{
-		return this.__raw.headers.get('x-forwarded-for') ?? 'unknown';
+		return this.__ip;
 	}
 
 	public get nanoseconds(): number
@@ -131,6 +133,11 @@ class BnnuyRequest
 	public setNanoseconds(nanoseconds: number): void
 	{
 		this.__nanoseconds = nanoseconds;
+	}
+
+	public setIP(ip: string): void
+	{
+		this.__ip = ip;
 	}
 }
 

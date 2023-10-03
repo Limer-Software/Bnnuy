@@ -257,7 +257,7 @@ class Bnnuy
 	 */
 	public post(route: string | string[], handler: RoutingHandler): Bnnuy
 	{
-		this.route('GET', route, handler);
+		this.route('POST', route, handler);
 		return this;
 	}
 
@@ -337,6 +337,8 @@ class Bnnuy
 		return res;
 	}
 
+	
+
 
 	/**
 	 * Creates and starts a server listening on the specified port.
@@ -362,6 +364,18 @@ class Bnnuy
 
 				if (!self.caseSensitive) {
 					pathname = pathname.toLowerCase();
+				}
+
+
+				if (request.headers.has('x-forwarded-for')) {
+					req.setIP(request.headers.get('x-forwarded-for')!);
+
+				} else if (request.headers.has('x-real-ip')) {
+					req.setIP(request.headers.get('x-real-ip')!);
+
+				} else {
+					// @ts-ignore
+					req.setIP(server.requestIP(request));
 				}
 
 
