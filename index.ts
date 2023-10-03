@@ -379,86 +379,83 @@ class Bnnuy
 				}
 
 
-				return new Promise<Response>(async (resolve, reject) =>
+				for (const entry of self.middlewares)
 				{
-					for (const entry of self.middlewares)
-					{
-						switch (entry.type) {
-							case 'static': // Handle static files
-								if (request.method !== 'GET') {
+					switch (entry.type) {
+						case 'static': // Handle static files
+							if (request.method !== 'GET') {
+								continue;
+							}
+
+							const file = entry.value.get(pathname);
+
+							if (file) {	
+								try {
+									if (file === 403) {
+										self.getHTTPCodeResponse(res, 403, 'Forbidden');
+
+										return await self.prepareResponse(req, res);
+									}
+
+
+									if (entry.value.options.maxAge !== undefined) {
+										var age: number;
+
+										if (typeof entry.value.options.maxAge === 'string') {
+											age = ms(entry.value.options.maxAge);
+
+										} else {
+											age = entry.value.options.maxAge;
+										}
+
+										res.setHeader('Cache-Control', `public, max-age=${age}, immutable`);
+									}
+
+									res.status(200).send(Bun.file(file));
+
+									return await self.prepareResponse(req, res);
+									
+								} catch (e) {
+									throw e;
+								}
+							}
+
+							break;
+
+						case 'router': // Handle routing
+							const response = entry.value.get(request.method.toUpperCase() as Methods, pathname);
+
+							if (response) {
+								try {
+									req.setParams(response.params);
+									await response.handler(req, res);
+
+									return await self.prepareResponse(req, res);
+								} catch (e) {
+									throw e;
+								}
+							}
+
+							break;
+
+						case 'middleware': // Handle middleware
+							try {
+								const fallback = await entry.value.handle(req, res);
+
+								if (fallback) {
 									continue;
 								}
 
-								const file = entry.value.get(pathname);
+								return await self.prepareResponse(req, res);
 
-								if (file) {	
-									try {
-										if (file === 403) {
-											self.getHTTPCodeResponse(res, 403, 'Forbidden');
-
-											return resolve(await self.prepareResponse(req, res));
-										}
-
-
-										if (entry.value.options.maxAge !== undefined) {
-											var age: number;
-
-											if (typeof entry.value.options.maxAge === 'string') {
-												age = ms(entry.value.options.maxAge);
-
-											} else {
-												age = entry.value.options.maxAge;
-											}
-
-											res.setHeader('Cache-Control', `public, max-age=${age}, immutable`);
-										}
-
-										res.status(200).send(Bun.file(file));
-
-										return resolve(await self.prepareResponse(req, res));
-										
-									} catch (e) {
-										return reject(e);
-									}
-								}
-
-								break;
-
-							case 'router': // Handle routing
-								const response = entry.value.get(request.method.toUpperCase() as Methods, pathname);
-
-								if (response) {
-									try {
-										req.setParams(response.params);
-										await response.handler(req, res);
-
-										return resolve(await self.prepareResponse(req, res));
-									} catch (e) {
-										return reject(e);
-									}
-								}
-
-								break;
-
-							case 'middleware': // Handle middleware
-								try {
-									const fallback = await entry.value.handle(req, res);
-
-									if (fallback) {
-										continue;
-									}
-
-									return resolve(await self.prepareResponse(req, res));
-
-								} catch (e) {
-									return reject(e);
-								}
-						}
+							} catch (e) {
+								throw e;
+							}
 					}
+				}
 
-					self.getHTTPCodeResponse(res, 404, 'Not Found');
-					return resolve(await self.prepareResponse(req, res));
-				});
+				self.getHTTPCodeResponse(res, 404, 'Not Found');
+				return await self.prepareResponse(req, res);
 			}
 		});
 
