@@ -131,11 +131,6 @@ class Bnnuy
 
 		var headers = res.getHeaders();
 
-		for (const [key, value] of this.headers) {
-			headers.set(key, value);
-		}
-
-
 		if (!headers.has('Content-Type')) {
 			if (typeof body === 'string') {
 				headers.set('Content-Type', 'text/html; charset=utf-8');
@@ -355,7 +350,7 @@ class Bnnuy
 			port: port,
 			async fetch(request, server)
 			{
-				const res: BnnuyResponse = new BnnuyResponse();
+				const res: BnnuyResponse = new BnnuyResponse(self.headers);
 				const req: BnnuyRequest = new BnnuyRequest(request);
 
 				req.setNanoseconds(Bun.nanoseconds());

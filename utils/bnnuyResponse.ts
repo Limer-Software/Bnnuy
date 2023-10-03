@@ -20,6 +20,11 @@ class BnnuyResponse
 	private readyToSend: boolean = false;
 
 
+	constructor(headers: Headers)
+	{
+		this.headers = headers;
+	}
+
 
 	/**
 	 * Set a header to the response. It will replace the header if it already exists.
