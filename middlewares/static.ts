@@ -6,7 +6,6 @@
 */
 
 
-import { watch } from 'fs';
 import { readdir } from 'fs/promises';
 import { minimatch } from 'minimatch';
 import chokidar from 'chokidar';
@@ -28,6 +27,11 @@ export interface ServeStaticOptions
 	 * Exclude dot files (files starting with a dot, including directories).
 	 */
 	excludeDotFiles?: boolean;
+
+	/**
+	 * Sets the max age of the Cache-Control header in milliseconds or a string in ms format.
+	 */
+	maxAge?: number | string;
 }
 
 
@@ -38,10 +42,13 @@ class StaticMiddleware
 	// { 'virtual/path': 'real/path' | 403 }
 	private directories: { [key: string]: string | 403 } = {};
 
+	private _options: ServeStaticOptions;
 
-	constructor(path: string)
+
+	constructor(path: string, options: ServeStaticOptions = {})
 	{
 		this.path = path;
+		this._options = options;
 
 
 		const watcher = chokidar.watch(path, { persistent: true });
@@ -58,9 +65,13 @@ class StaticMiddleware
 	}
 
 
-	private async loadDirectory(dir: string,
-								pathToRemove: string | undefined = undefined,
-								options: ServeStaticOptions = {})
+	public get options()
+	{
+		return this._options;
+	}
+
+
+	private async loadDirectory(dir: string, pathToRemove: string | undefined = undefined)
 	{
 		const files = await readdir(dir, { withFileTypes: true });
 
@@ -73,7 +84,7 @@ class StaticMiddleware
 			const virtualPath = `${path}`.replace(pathToRemove, '');
 
 			// Exclude dot files
-			if (options.excludeDotFiles === true) {
+			if (this.options.excludeDotFiles === true) {
 				if (file.name.startsWith('.')) {
 					continue;
 				}
@@ -81,18 +92,18 @@ class StaticMiddleware
 
 
 			if (file.isDirectory()) {
-				if (options.useDirHTTPCode !== undefined) {
+				if (this.options.useDirHTTPCode !== undefined) {
 					this.directories[virtualPath] = 403;
 					this.directories[`${virtualPath}/`] = 403;
 				}
 
-				await this.loadDirectory(path, pathToRemove, options);
+				await this.loadDirectory(path, pathToRemove);
 
 			} else {
 				// Exclude files
 				var exclude = false;
 
-				for (const pattern of options.exclude ?? []) {
+				for (const pattern of this.options.exclude ?? []) {
 					if (minimatch(path, pattern, { matchBase: true })) {
 						exclude = true;
 						continue;
@@ -125,11 +136,11 @@ class StaticMiddleware
 	}
 
 
-	public async loadPaths(options: ServeStaticOptions = {})
+	public async loadPaths()
 	{
 		this.directories = {};
 
-		await this.loadDirectory(this.path, undefined, options);
+		await this.loadDirectory(this.path, undefined);
 	}
 
 

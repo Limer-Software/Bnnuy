@@ -14,6 +14,7 @@ import RouterMiddleware from './middlewares/router';
 import StaticMiddleware, { ServeStaticOptions } from './middlewares/static';
 import { ErrorHandler, HTTPError, Handler, Methods, RoutingHandler, httpCodeToText } from './middlewares/types';
 import BnnuyRequest from './utils/bnnuyRequest';
+import ms from 'ms';
 
 
 interface BnnuyOptions
@@ -173,10 +174,10 @@ class Bnnuy
 	 */
 	public static(path: string, options: ServeStaticOptions = {}): Bnnuy
 	{
-		const middleware = new StaticMiddleware(path);
+		const middleware = new StaticMiddleware(path, options);
 
 		(async () => {
-			await middleware.loadPaths(options);
+			await middleware.loadPaths();
 		})();
 
 		this.middlewares.push({
@@ -382,6 +383,20 @@ class Bnnuy
 											self.getHTTPCodeResponse(res, 403, 'Forbidden');
 
 											return resolve(await self.prepareResponse(req, res));
+										}
+
+
+										if (entry.value.options.maxAge !== undefined) {
+											var age: number;
+
+											if (typeof entry.value.options.maxAge === 'string') {
+												age = ms(entry.value.options.maxAge);
+
+											} else {
+												age = entry.value.options.maxAge;
+											}
+
+											res.setHeader('Cache-Control', `public, max-age=${age}, immutable`);
 										}
 
 										res.status(200).send(Bun.file(file));
