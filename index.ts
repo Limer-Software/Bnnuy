@@ -32,6 +32,11 @@ interface BnnuyOptions
 	 * @default true
 	 */
 	cors?: boolean;
+
+	/**
+	 * Enable case sensitivity.
+	 */
+	caseSensitive?: boolean;
 }
 
 
@@ -65,6 +70,7 @@ class Bnnuy
 
 	private headers: Headers = new Headers();
 	private compression: boolean = false;
+	private caseSensitive: boolean = false;
 
 
 	constructor(options: BnnuyOptions = {})
@@ -76,6 +82,7 @@ class Bnnuy
 
 
 		this.compression = options.compression ?? false;
+		this.caseSensitive = options.caseSensitive ?? false;
 
 		if (options.cors ?? true) {
 			this.headers.set('Access-Control-Allow-Origin', 'self');
@@ -349,6 +356,12 @@ class Bnnuy
 
 				req.setNanoseconds(Bun.nanoseconds());
 
+				var pathname = req.url.pathname;
+
+				if (!self.caseSensitive) {
+					pathname = pathname.toLowerCase();
+				}
+
 
 				return new Promise<Response>(async (resolve, reject) =>
 				{
@@ -360,7 +373,7 @@ class Bnnuy
 									continue;
 								}
 
-								const file = entry.value.get(req.url.pathname);
+								const file = entry.value.get(pathname);
 
 								if (file) {	
 									try {
@@ -382,8 +395,7 @@ class Bnnuy
 								break;
 
 							case 'router': // Handle routing
-								const response = entry.value.get(request.method.toUpperCase() as Methods,
-																req.url.pathname);
+								const response = entry.value.get(request.method.toUpperCase() as Methods, pathname);
 
 								if (response) {
 									try {

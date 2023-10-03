@@ -6,7 +6,6 @@
 */
 
 
-
 class BnnuyBodyConsumer
 {
 	private raw: Request;
@@ -53,6 +52,15 @@ class BnnuyBodyConsumer
 	}
 }
 
+
+export type Route = string;
+
+export interface ParamsDictionary
+{
+	[key: string]: string;
+}
+
+
 class BnnuyRequest
 {
 	public readonly headers: Headers = new Headers();
@@ -61,7 +69,7 @@ class BnnuyRequest
 	private __method: string;
 	private __url: URL;
 	private __body: BnnuyBodyConsumer;
-	private __params: { [key: string]: string };
+	private __params: ParamsDictionary;
 
 	private __nanoseconds: number = 0;
 
@@ -94,7 +102,7 @@ class BnnuyRequest
 		return this.__url;
 	}
 
-	public get params(): { [key: string]: string }
+	public get params(): ParamsDictionary
 	{
 		return this.__params;
 	}
@@ -115,7 +123,7 @@ class BnnuyRequest
 	}
 
 
-	public setParams(params: { [key: string]: string }): void
+	public setParams(params: ParamsDictionary): void
 	{
 		this.__params = params;
 	}
