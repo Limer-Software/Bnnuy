@@ -18,8 +18,6 @@ class RouterMiddleware
 
 	public add(method: Methods, paths: string[], handler: RoutingHandler): void
 	{
-		console.log(method, paths);
-
 		if (!this.routes.has(method)) {
 			this.routes.set(method, new BnnuyRouter());
 		}
