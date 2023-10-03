@@ -6,12 +6,13 @@
 */
 
 
+import { Server } from 'bun';
+
 import BnnuyResponse from './utils/bnnuyResponse';
 import Middleware from './middlewares/classic';
 import RouterMiddleware from './middlewares/router';
 import StaticMiddleware, { ServeStaticOptions } from './middlewares/static';
-import { Server } from 'bun';
-import { ErrorHandler, HTTPError, Handler, Methods, Request, RoutingHandler, httpCodeToText } from './middlewares/types';
+import { ErrorHandler, HTTPError, Handler, Methods, RoutingHandler, httpCodeToText } from './middlewares/types';
 import BnnuyRequest from './utils/bnnuyRequest';
 
 
@@ -446,9 +447,3 @@ export default function bnnuy(options?: BnnuyOptions) {
 	return new Bnnuy(options ?? {});
 }
 
-
-// export {
-// 	BnnuyResponse,
-// 	BnnuyMiddlewareResponse,
-// 	BnnuyOptions
-// };
