@@ -304,6 +304,15 @@ class Bnnuy
 		if (!headers.has('Content-Type')) {
 			if (typeof body === 'string') {
 				headers.set('Content-Type', 'text/html; charset=utf-8');
+
+			} else if (body instanceof Uint8Array || body instanceof ReadableStream) {
+				headers.set('Content-Type', 'application/octet-stream');
+
+			} else if (typeof body === 'object') {
+				headers.set('Content-Type', 'application/json; charset=utf-8');
+
+			} else if (body === null) {
+				headers.set('Content-Type', 'text/plain; charset=utf-8');
 			}
 		}
 
@@ -346,30 +355,23 @@ class Bnnuy
 
 
 		const server = Bun.serve({
-			port: port,
+			port,
 			async fetch(request, server)
 			{
 				const res: BnnuyResponse = new BnnuyResponse(self.headers);
-				const req: BnnuyRequest = new BnnuyRequest(request);
+				const req: BnnuyRequest = new BnnuyRequest(server, request);
 
-				req.setNanoseconds(Bun.nanoseconds());
 
-				var pathname = req.url.pathname;
+				const subdirIndex = request.url.indexOf('/', 11);
+				const queryIndex = request.url.indexOf('?', subdirIndex + 1);
+
+				var pathname = queryIndex === -1 ?
+								request.url.substring(subdirIndex) :
+								request.url.substring(subdirIndex, queryIndex);
+
 
 				if (!self.caseSensitive) {
 					pathname = pathname.toLowerCase();
-				}
-
-
-				if (request.headers.has('x-forwarded-for')) {
-					req.setIP(request.headers.get('x-forwarded-for')!);
-
-				} else if (request.headers.has('x-real-ip')) {
-					req.setIP(request.headers.get('x-real-ip')!);
-
-				} else {
-					// @ts-ignore
-					req.setIP(server.requestIP(request));
 				}
 
 
@@ -408,7 +410,6 @@ class Bnnuy
 									res.status(200).send(Bun.file(file));
 
 									return await self.prepareResponse(req, res);
-									
 								} catch (e) {
 									throw e;
 								}

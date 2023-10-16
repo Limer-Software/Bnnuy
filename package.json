@@ -1,62 +1,56 @@
 {
-	"name": "bnnuy",
-	"version": "0.3.6-1",
-	"module": "index.ts",
-	"type": "module",
-	"description": "A fast, lightweight, simple, and easy to use framework for Bun's HTTP API.",
-
-	"author": "Limer Software",
-	"contributors": [
-		{
-			"name": "RobotoSkunk",
-			"email": "contact@robotoskunk.com",
-			"url": "https://robotoskunk.com"
-		}
-	],
-
-	"license": "LGPL-3.0-only",
-	"keywords": [
-		"bun",
-		"bnnuy",
-		"bunny",
-		"express",
-		"expressjs",
-		"framework",
-		"http",
-		"websocket",
-		"ws",
-		"fast",
-		"lightweight",
-		"light",
-		"simple"
-	],
-
-	"repository": {
-		"url": "https://github.com/Limer-Software/Bnnuy.git"
-	},
-	"bugs": {
-		"url": "https://github.com/Limer-Software/Bnnuy/issues",
-		"email": "contact@robotoskunk.com"
-	},
-
-	"scripts": {
-		"test": "bun run --watch test/index.ts"
-	},
-
-	"devDependencies": {
-		"@types/ms": "^0.7.32",
-		"bun-types": "latest"
-	},
-	"peerDependencies": {
-		"typescript": "^5.0.0"
-	},
-	"dependencies": {
-		"chokidar": "^3.5.3",
-		"minimatch": "^9.0.3",
-		"ms": "^2.1.3"
-	},
-
-	"engines": {
-		"bun": ">=1.0.4"
-	}
+  "name": "bnnuy",
+  "version": "0.3.7-1",
+  "module": "index.ts",
+  "type": "module",
+  "description": "A fast, lightweight, simple, and easy to use framework for Bun's HTTP API.",
+  "author": "Limer Software",
+  "contributors": [
+    {
+      "name": "RobotoSkunk",
+      "email": "contact@robotoskunk.com",
+      "url": "https://robotoskunk.com"
+    }
+  ],
+  "license": "LGPL-3.0-only",
+  "keywords": [
+    "bun",
+    "bnnuy",
+    "bunny",
+    "express",
+    "expressjs",
+    "framework",
+    "http",
+    "websocket",
+    "ws",
+    "fast",
+    "lightweight",
+    "light",
+    "simple"
+  ],
+  "repository": {
+    "url": "https://github.com/Limer-Software/Bnnuy.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Limer-Software/Bnnuy/issues",
+    "email": "contact@robotoskunk.com"
+  },
+  "scripts": {
+    "test": "bun run --watch test/index.ts"
+  },
+  "devDependencies": {
+    "@types/ms": "^0.7.32",
+    "bun-types": "^1.0.4-canary.20231003T140149"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "chokidar": "^3.5.3",
+    "minimatch": "^9.0.3",
+    "ms": "^2.1.3"
+  },
+  "engines": {
+    "bun": ">=1.0.4"
+  }
 }

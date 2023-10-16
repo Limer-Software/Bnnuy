@@ -40,7 +40,7 @@ class StaticMiddleware
 	private path: string;
 
 	// { 'virtual/path': 'real/path' | 403 }
-	private directories: { [key: string]: string | 403 } = {};
+	private directories: Map<string, string | 403> = new Map();
 
 	private _options: ServeStaticOptions;
 
@@ -49,6 +49,8 @@ class StaticMiddleware
 	{
 		this.path = path;
 		this._options = options;
+
+		this.directories = new Map();
 
 
 		const watcher = chokidar.watch(path, { persistent: true });
@@ -60,7 +62,7 @@ class StaticMiddleware
 
 		watcher.on('unlink', async (path) =>
 		{
-			delete this.directories[this.realPathToVirtualPath(path)];
+			this.directories.delete(this.realPathToVirtualPath(path));
 		});
 	}
 
@@ -93,8 +95,8 @@ class StaticMiddleware
 
 			if (file.isDirectory()) {
 				if (this.options.useDirHTTPCode !== undefined) {
-					this.directories[virtualPath] = 403;
-					this.directories[`${virtualPath}/`] = 403;
+					this.directories.set(virtualPath, 403);
+					this.directories.set(`${virtualPath}/`, 403);
 				}
 
 				await this.loadDirectory(path, pathToRemove);
@@ -115,8 +117,8 @@ class StaticMiddleware
 				}
 
 				// Prevent duplicates
-				if (this.directories[virtualPath] === undefined) {
-					this.directories[virtualPath] = path;
+				if (!this.directories.has(virtualPath)) {
+					this.directories.set(virtualPath, path);
 				}
 			}
 		}
@@ -138,15 +140,13 @@ class StaticMiddleware
 
 	public async loadPaths()
 	{
-		this.directories = {};
-
 		await this.loadDirectory(this.path, undefined);
 	}
 
 
 	public get(path: string)
 	{
-		return this.directories[path];
+		return this.directories.get(path);
 	}
 }
 

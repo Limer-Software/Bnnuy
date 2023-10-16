@@ -5,6 +5,8 @@
 	Licensed under LGPLv3 <https://www.gnu.org/licenses/lgpl-3.0.txt>
 */
 
+import { Server } from 'bun';
+
 
 class BnnuyBodyConsumer
 {
@@ -66,23 +68,26 @@ class BnnuyRequest
 	public readonly headers: Headers = new Headers();
 
 	private __raw: Request;
+	private server: Server;
+
 	private __method: string;
-	private __url: URL;
-	private __body: BnnuyBodyConsumer;
+	private __url?: URL;
+	private __body?: BnnuyBodyConsumer;
 	private __params: ParamsDictionary;
-	private __ip: string;
+	private __ip?: string;
 
 	private __nanoseconds: number = 0;
 
 
-	constructor(req: Request)
+	constructor(server: Server, req: Request)
 	{
 		this.__raw = req;
+		this.server = server;
+
 		this.__method = req.method;
-		this.__url = new URL(req.url);
-		this.__body = new BnnuyBodyConsumer(req);
 		this.__params = {};
-		this.__ip = '';
+
+		this.__nanoseconds = Bun.nanoseconds();
 
 		this.headers = req.headers;
 	}
@@ -96,11 +101,19 @@ class BnnuyRequest
 
 	public get body(): BnnuyBodyConsumer
 	{
+		if (!this.__body) {
+			this.__body = new BnnuyBodyConsumer(this.__raw);
+		}
+
 		return this.__body;
 	}
 
 	public get url(): URL
 	{
+		if (!this.__url) {
+			this.__url = new URL(this.__raw.url!);
+		}
+
 		return this.__url;
 	}
 
@@ -116,7 +129,19 @@ class BnnuyRequest
 
 	public get ip(): string
 	{
-		return this.__ip;
+		if (!this.__ip) {
+			if (this.__raw.headers.has('x-forwarded-for')) {
+				this.__ip = this.__raw.headers.get('x-forwarded-for')!;
+	
+			} else if (this.__raw.headers.has('x-real-ip')) {
+				this.__ip = this.__raw.headers.get('x-real-ip')!;
+	
+			} else {
+				this.__ip = this.server.requestIP(this.__raw)?.address;
+			}
+		}
+
+		return this.__ip!;
 	}
 
 	public get nanoseconds(): number
@@ -130,15 +155,6 @@ class BnnuyRequest
 		this.__params = params;
 	}
 
-	public setNanoseconds(nanoseconds: number): void
-	{
-		this.__nanoseconds = nanoseconds;
-	}
-
-	public setIP(ip: string): void
-	{
-		this.__ip = ip;
-	}
 }
 
 export default BnnuyRequest;
